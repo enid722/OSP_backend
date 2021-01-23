@@ -1,11 +1,11 @@
-import mysql from 'mysql';
-import config from './config.js';
+import mysql from 'mysql2';
+import config from './config';
 
 var mysqlConnection = mysql.createConnection(config.databaseOptions);
 
 mysqlConnection.connect((err) => {
     if (err) throw err;
-    console.log("Connected");
+    console.log("Successfully connected to the database");
 })
 
 
