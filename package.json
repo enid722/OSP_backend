@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --watch ./ --exec babel-node server.js"
+    "start": "nodemon --watch ./ --ignore ./client --exec babel-node server.js"
   },
   "author": "Enid",
   "license": "MIT",
@@ -13,7 +13,8 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-handlebars": "^5.2.0",
-    "mysql2": "^2.2.5"
+    "mysql2": "^2.2.5",
+    "random-token": "0.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

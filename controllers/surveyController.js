@@ -1,4 +1,6 @@
 import Survey from "../models/surveyModel"
+import randomToken from "random-token"
+
 
 exports.create = async (req, res) => {
     // Validate request
@@ -11,7 +13,7 @@ exports.create = async (req, res) => {
     // Create a Survey
     const survey = new Survey({
       title: req.body.title,
-      token: req.body.token
+      token: randomToken(8)
     });
   
     // Save Survey in the database
