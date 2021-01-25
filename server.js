@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import surveyRoute from './routes/surveyRoute'
+import inputSpecRoute from './routes/inputSpecRoute'
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -13,8 +14,9 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 app.use(bodyParser.json());
 
 app.use("/api/surveys", surveyRoute);
+app.use("/api/input_specs", inputSpecRoute);
 
-/*
+/* 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname+'/client/build/index.html'));
   });*/

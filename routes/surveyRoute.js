@@ -26,5 +26,11 @@ router.delete("/", surveys.deleteAll);
 // Retrieve all questions in a Survey with surveyId
 router.get("/:surveyId/questions/", questions.findAllBySurveyId);
 
+// Update all questions in a Survey with surveyId
+router.put("/:surveyId/questions/", questions.updateMultipleById);
+
+
+
+
 
 export default router;

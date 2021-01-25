@@ -70,7 +70,11 @@ exports.findOne = async (req, res) => {
   
     await Survey.updateById(
       req.params.surveyId,
-      new Survey(req.body),
+      new Survey(
+        {
+          title: req.body.title,
+          token: randomToken(8)
+        }),
       (err, data) => {
         if (err) {
           if (err.kind === "not_found") {

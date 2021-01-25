@@ -105,6 +105,37 @@ exports.findOne = async (req, res) => {
     );
   };
   
+
+    // Update a set of Questions identified by the surveyId in the request
+    exports.updateMultipleById = async (req, res) => {
+      // Validate Request
+      if (!req.body) {
+        res.status(400).send({
+          message: "Content can not be empty!"
+        });
+      }
+    
+      console.log(req.body);
+    
+      await Question.updateMultipleById(
+        req.params.surveyId,
+        req.body,
+        (err, data) => {
+          if (err) {
+            if (err.kind === "not_found") {
+              res.status(404).send({
+                message: `Not found Question with surveyId ${req.params.surveyId}.`
+              });
+            } else {
+              res.status(500).send({
+                message: "Error updating Question with surveyId " + req.params.surveyId
+              });
+            }
+          } else res.send(data);
+        }
+      );
+    };
+    
   // Delete a Question with the specified questionId in the request
   exports.delete = async (req, res) => {
     await Question.remove(req.params.questionId, (err, data) => {

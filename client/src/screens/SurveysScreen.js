@@ -7,7 +7,6 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import Icon from '@material-ui/core/Icon';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Button from '@material-ui/core/Button';
 import EditIcon from '@material-ui/icons/Edit';
@@ -15,9 +14,8 @@ import AssessmentIcon from '@material-ui/icons/Assessment';
 import CropFreeIcon from '@material-ui/icons/CropFree';
 import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/core/styles';
-import CircularProgress from '@material-ui/core/CircularProgress';
-
-import {getSurveyList} from '../services/surveyService';
+import { useSelector, useDispatch } from 'react-redux';
+import { listSurveys } from '../actions/surveyActions';
 
 const useStyles = makeStyles((theme) => ({
   button: {
@@ -26,29 +24,13 @@ const useStyles = makeStyles((theme) => ({
 }));
 function SurveysScreen (props){
 
-    const [surveys, setSurveys] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
 
-    const getSurveyList = async () => {
-      setError("");
-      setIsLoading(true);
-      await fetch('/api/surveys')
-      .then( res => {
-        if (!res.ok) { throw res }
-        return res.json();
-      })
-      .then(surveys => setSurveys(surveys))
-      .catch( err => {
-        err.text().then( errorMessage => {
-          setError(errorMessage)
-        })})
-      setIsLoading(false);
-    };
-
+    const surveyList = useSelector(state => state.surveyList);
+    const {surveys, loading, error} = surveyList;
+    const dispatch = useDispatch();
 
     useEffect(() => {
-      getSurveyList();
+      dispatch(listSurveys());
   },[])
 
 
@@ -66,8 +48,8 @@ function SurveysScreen (props){
               >
                 New Survey
               </Button>
-              {isLoading? "Loading...":
-        error? <div>{error}</div>:<div></div>}
+    {loading? <div>Loading...</div>:
+      error?<div>{error}</div>:""}
     <div className="survey-list">
       <TableContainer component={Paper}>
       <Table aria-label="simple table">
