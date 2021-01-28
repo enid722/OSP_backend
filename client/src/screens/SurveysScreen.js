@@ -15,7 +15,7 @@ import CropFreeIcon from '@material-ui/icons/CropFree';
 import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/core/styles';
 import { useSelector, useDispatch } from 'react-redux';
-import { listSurveys } from '../actions/surveyActions';
+import { deleteSurvey, listSurveys } from '../actions/surveyActions';
 
 const useStyles = makeStyles((theme) => ({
   button: {
@@ -27,14 +27,24 @@ function SurveysScreen (props){
 
     const surveyList = useSelector(state => state.surveyList);
     const {surveys, loading, error} = surveyList;
+
+    const surveyDelete = useSelector(state=>state.surveyDelete);
+    const { loading: loadingDelete, success: successDelete, error: errorDelete} = surveyDelete;
+
     const dispatch = useDispatch();
 
     useEffect(() => {
       dispatch(listSurveys());
-  },[])
+  },[successDelete])
 
 
   const classes = useStyles();
+
+
+  const deleteSurveyHandler = (surveyId)=>{
+    dispatch(deleteSurvey(surveyId));
+    console.log("Deleted Survey: "+ surveyId);
+  }
 
     return <div>
       
@@ -63,7 +73,7 @@ function SurveysScreen (props){
         </TableHead>
         
         <TableBody>
-          {surveys.map((survey) => (
+          {surveys && surveys.map((survey) => (
             <TableRow key={survey.id}>
               <TableCell component="th" scope="row">
                 {survey.id}
@@ -86,10 +96,13 @@ function SurveysScreen (props){
                 color="secondary"
                 className={classes.button}
                 startIcon={<DeleteIcon />}
-              >
+                onClick={e => deleteSurveyHandler(survey.id)}
+                >
                 Delete
               </Button>
               <Button
+                component={ Link }
+                to={"/report/" + survey.id}
                 variant="contained"
                 color="primary"
                 className={classes.button}
@@ -98,6 +111,8 @@ function SurveysScreen (props){
                 Report
               </Button>
               <Button
+                component={ Link }
+                to={"/qrCode/" + survey.id}
                 variant="contained"
                 color="primary"
                 className={classes.button}

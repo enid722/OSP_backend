@@ -1,4 +1,4 @@
-import { SURVEY_DETAILS_FAIL, SURVEY_DETAILS_REQUEST, SURVEY_DETAILS_SUCCESS, SURVEY_LIST_FAIL, SURVEY_LIST_REQUEST, SURVEY_LIST_SUCCESS, SURVEY_SAVE_FAIL, SURVEY_SAVE_REQUEST, SURVEY_SAVE_SUCCESS} from "../constants/surveyConstants";
+import { SURVEY_DELETE_FAIL, SURVEY_DELETE_REQUEST, SURVEY_DELETE_SUCCESS, SURVEY_DETAILS_FAIL, SURVEY_DETAILS_REQUEST, SURVEY_DETAILS_SUCCESS, SURVEY_LIST_FAIL, SURVEY_LIST_REQUEST, SURVEY_LIST_SUCCESS, SURVEY_SAVE_FAIL, SURVEY_SAVE_REQUEST, SURVEY_SAVE_SUCCESS} from "../constants/surveyConstants";
 
 
 function surveyListReducer(state = {surveys:[]}, action){
@@ -44,7 +44,19 @@ function surveySaveReducer(state = {survey:{}}, action){
     }
 }
 
+function surveyDeleteReducer(state = {survey:{}}, action){
 
+    switch (action.type){
+        case SURVEY_DELETE_REQUEST:
+            return {loading:true};
+        case SURVEY_DELETE_SUCCESS:
+            return {loading:false, success: true, survey: action.payload};
+        case SURVEY_DELETE_FAIL:
+            return {loading:false, error: action.payload};
+        default:
+            return state;
+    }
+}
 
-export {surveyListReducer, surveyDetailsReducer, surveySaveReducer};
+export {surveyListReducer, surveyDetailsReducer, surveySaveReducer, surveyDeleteReducer};
 

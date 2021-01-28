@@ -2,6 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import surveyRoute from './routes/surveyRoute'
 import inputSpecRoute from './routes/inputSpecRoute'
+import questionRoute from './routes/questionRoute'
+import choiceRoute from './routes/choiceRoute'
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -15,6 +17,8 @@ app.use(bodyParser.json());
 
 app.use("/api/surveys", surveyRoute);
 app.use("/api/input_specs", inputSpecRoute);
+app.use("/api/questions", questionRoute);
+app.use("/api/choices", choiceRoute);
 
 /* 
 app.get('*', (req, res) => {

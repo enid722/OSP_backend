@@ -1,6 +1,6 @@
 import mysql from 'mysql2';
 import config from './config';
-
+/*
 var mysqlConnection = mysql.createConnection(config.databaseOptions);
 
 mysqlConnection.connect((err) => {
@@ -9,4 +9,10 @@ mysqlConnection.connect((err) => {
 })
 
 
-export default mysqlConnection;
+export default mysqlConnection;*/
+
+var pool = mysql.createPool(config.databaseOptions);
+
+
+
+export default pool;

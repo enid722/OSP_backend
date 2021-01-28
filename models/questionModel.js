@@ -1,12 +1,11 @@
 import sql from "../db-connection";
-import mysql from 'mysql2';
 
 // constructor
 const Question = function (question) {
     this.title = question.title;
     this.input_type = question.input_type;
     this.input_spec_id = question.input_spec_id;
-    this.input_survey_id = question.input_survey_id;
+    this.survey_id = question.survey_id;
 };
 
 Question.create = (newQuestion, result) => {
@@ -28,6 +27,47 @@ Question.create = (newQuestion, result) => {
     });
 };
 
+Question.createChoicesByQuestionId = (questionId, choices, result) =>{
+
+    var sql_insert_choices = "INSERT INTO choices (name, input_spec_id) VALUES ?";
+    console.log(questionId);
+    console.log(choices);
+    const newChoices = choices.map(c => [c.name, c.input_spec_id]);
+    console.log(newChoices);
+    //create choices
+    sql.query(sql_insert_choices, [newChoices], function(err, res) {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+        console.log(res);
+        const createdChoices = choices.map((c,index) => c = {...c, id: res.insertId+index});
+        const newQuestionChoices = createdChoices.map(c => [Number(questionId), c.id]);
+        console.log("created choices: ", {
+            id: res.insertId,
+            ...newQuestionChoices
+        });
+
+        var sql_insert_question_choices = "INSERT INTO question_choices (question_id, choice_id) VALUES ?";
+        //create question_choices
+        sql.query(sql_insert_question_choices, [newQuestionChoices], function(err, res) {
+            if (err) {
+                console.log("error: ", err);
+                result(err, null);
+                return;
+            }
+            const createdQuestionChoices = newQuestionChoices.map((qc,index) => qc = {question_id:qc[0], choice_id:qc[1], id: res.insertId+index});
+            console.log("created question choices: ", createdQuestionChoices);
+            result(null, {questionChoices:createdQuestionChoices, choices:createdChoices});
+        });
+
+
+        //result(null, createdChoices); 
+    });
+
+}
+
 Question.getAll = result => {
     sql.query("SELECT * FROM questions", (err, res) => {
         if (err) {
@@ -40,35 +80,24 @@ Question.getAll = result => {
         result(null, res);
     });
 };
-/*
-Question.getAllBySurveyId = (surveyId,result) => {
-    sql.query(`SELECT * FROM questions WHERE questions.survey_id = ${surveyId}`, (err, res) => {
-        if (err) {
-            console.log("error: ", err);
-            result(null, err);
-            return;
-        }
-
-        console.log("questions: ", res);
-        result(null, res);
-    });
-};*/
 
 Question.getAllBySurveyId = (surveyId,result) => {
-    sql.query(`select q.id, q.title, q.input_type, q.input_spec_id, 
-                concat('[',group_concat(concat('{"id":"',c.id,'","name":"',c.name,'"}') separator ','),']') as choices 
-                from questions q, choices c, question_choices qc, input_specs i
-                where q.id = qc.question_id
-                AND c.id = qc.choice_id
-                AND i.id = q.input_spec_id
-                AND q.survey_id = ${surveyId} 
-                GROUP BY q.id, q.title, q.input_type, q.input_spec_id `, (err, res) => {
+    sql.query(`SELECT t1.id, t1.title, t1.input_type, t1.input_spec_id, 
+    concat('[',group_concat(concat('{"id":',t2.id,',"name":"',t2.name,'"}') separator ','),']') as choices
+    FROM
+    (SELECT q.id, q.title, q.input_type, q.input_spec_id FROM questions q WHERE q.survey_id = ${surveyId}) as t1
+    LEFT JOIN 
+    (SELECT qc.question_id, c.id, c.name FROM question_choices qc, OSP.choices c 
+    WHERE qc.choice_id = c.id) as t2
+    ON t1.id = t2.question_id
+    GROUP BY t1.id, t1.title, t1.input_type, t1.input_spec_id`, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(null, err);
             return;
         }
         res = res.map(row => (row.choices = JSON.parse(row.choices), row));
+        
         console.log("questions: ", res);
         result(null, res);
     });
@@ -96,9 +125,21 @@ Question.findById = (questionId, result) => {
 };
 
 
-Question.updateById = (id, question, result) => {
+Question.updateById = (id, update, oridinal, result) => {
+    console.log(update);
+    const newTitle = typeof update.title === 'undefined'?oridinal.title: update.title;
+    const newInputSpecId = typeof update.input_spec_id === 'undefined'?oridinal.input_spec_id: update.input_spec_id;
+    const newInputType = typeof update.input_type === 'undefined'?oridinal.input_type: update.input_type;
+    const newQuestion = {
+        title: newTitle,
+        input_spec_id: newInputSpecId,
+        input_type: newInputType
+    };
+
+    console.log(newQuestion);
+    console.log(id);
     sql.query("UPDATE questions SET title = ?, input_spec_id = ?, input_type = ? WHERE id = ?", [
-        question.title, question.input_spec_id, question.input_type, id
+        newTitle, newInputSpecId, newInputType, id
     ], (err, res) => {
         if (err) {
             console.log("error: ", err);
@@ -115,41 +156,16 @@ Question.updateById = (id, question, result) => {
 
         console.log("updated question: ", {
             id: id,
-            ...question
+            ...newQuestion
         });
         result(null, {
             id: id,
-            ...survey
+            ...newQuestion
         });
+        
     });
 };
 
-Question.updateMultipleById = (surveyId, questions, result) => {
-
-    var queries = '';
-    console.log(surveyId, questions);
-    questions.forEach(function (question) {
-        queries += sql.format("UPDATE questions SET title = ?, input_spec_id = ?, input_type = ? WHERE id = ?; ", [question.title, question.input_spec_id, question.input_type, question.id]);
-      });
-
-    sql.query(queries, (err, res) => {
-        if (err) {
-            console.log("error: ", err);
-            result(null, err);
-            return;
-        }
-
-        if (res.affectedRows == 0) { // not found Question with the id
-            result({
-                kind: "not_found"
-            }, null);
-            return;
-        }
-
-        console.log("updated question: ", questions);
-        result(null, questions);
-    });
-};
 
 Question.remove = (id, result) => {
     sql.query("DELETE FROM questions WHERE id = ?", id, (err, res) => {
@@ -170,6 +186,24 @@ Question.remove = (id, result) => {
         result(null, res);
     });
 };
+
+Question.removeChoicesByQuestionId = (questionId, choices, result) =>{
+
+    console.log(questionId);
+    console.log(choices);
+    //delete choices
+    sql.query(`DELETE FROM choices WHERE id IN (${choices})`, function(err, res) {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+        console.log(res);
+        console.log("removed choices: ", choices);
+        result(null, res); 
+    });
+
+}
 
 Question.removeAll = result => {
     sql.query("DELETE FROM questions", (err, res) => {

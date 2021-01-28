@@ -17,6 +17,7 @@ import IconButton from '@material-ui/core/IconButton';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
+import { addedDiff, deletedDiff, updatedDiff, detailedDiff } from 'deep-object-diff';
 import { v4 as uuidv4 } from 'uuid';
 import { detailsSurvey, saveSurvey } from '../actions/surveyActions';
 import { listInputSpecs, listQuestions, saveQuestions } from '../actions/questionActions';
@@ -48,20 +49,10 @@ const useStyles = makeStyles((theme) => ({
   
 function QuestionsScreen (props){
 
-  
-    //const [survey, setSurvey] = useState({});
-    //const [isSurveyUpdated, setIsSurveyUpdated] = useState(false);
-    //const [isQuestionUpdated, setIsQuestionUpdated] = useState(false);
-    //const [isLoading, setIsLoading] = useState(false);
-    //const [error, setError] = useState("");
- 
-    const [surveyTitle, setSurveyTitle] = useState('');
-    const [surveyId, setSurveyId] = useState('');
+    const [isSurveySave, setIsSurveySave] = useState(false);
+    const [surveyFields, setSurveyFields] = useState({});
     const [questionFields, setQuestionFields] = useState([
-        { id: uuidv4(), title: '', input_type:'', input_spec_id:'', choices:[{id: uuidv4(), name: '', input_spec_id:''}]},
-      ]);
-    const [choiceFields, setChoiceFields] = useState([
-        { id: uuidv4(), name: '', input_spec_id:''},
+        { id: uuidv4(), title: '', input_type:'textbox', input_spec_id:null, choices:null},
       ]);
     const [inputSpecFields, setInputSpecFields] = useState([
         { id: '', name: ''},
@@ -69,15 +60,17 @@ function QuestionsScreen (props){
     const surveyDetails = useSelector(state => state.surveyDetails);
     const surveySave = useSelector(state=>state.surveySave);
     const questionList = useSelector(state => state.questionList);
+    const questionSave = useSelector(state => state.questionSave);
     const inputSpecList = useSelector(state => state.inputSpecList);
-    const {survey, loading, error} = surveyDetails;
+    const {survey, loading: loadingSurveyDetails, error: errorSurveyDetails} = surveyDetails;
     const { loading: loadingSave, success: successSave, error: errorSave, survey: successSaveSurvey} = surveySave;
     const {questions, loading: loadingQuestionList, error: errorQuestionList} = questionList;
     const {inputSpecs, loading: loadingInputSpecList, error: errorInputSpecList} = inputSpecList;
+    const { loading: loadingSaveQuestion, success: successSaveQuestion, error: errorSaveQuestion} = questionSave;
+
     const dispatch = useDispatch();
 
     const classes = useStyles();
-
 
     useEffect(async () => {
       if (props.match.params.id){
@@ -87,15 +80,7 @@ function QuestionsScreen (props){
           dispatch(listInputSpecs())
         ])
       }
-      /*
-      if (props.match.params.id){
-        dispatch(detailsSurvey(props.match.params.id));
-        dispatch(listQuestions(props.match.params.id));
-        dispatch(listInputSpecs());
-      }*/
-
-      
-
+      // todo:handle new survey
       return () => {
           //
       };
@@ -104,12 +89,13 @@ function QuestionsScreen (props){
       useEffect(() => {
         if (props.match.params.id){
           if(survey.title){
-            setSurveyTitle(survey.title);
-            setSurveyId(survey.id);
+            //setSurveyTitle(survey.title);
+            //setSurveyId(survey.id);
+            setSurveyFields({id:survey.id, title:survey.title})
           }
           if(questions){
-            setQuestionFields(questions);
-            setChoiceFields(questions.choices);
+            const newQuestions = JSON.parse(JSON.stringify(questions));
+            setQuestionFields(newQuestions);
           }
         }
         if(inputSpecs){
@@ -121,25 +107,29 @@ function QuestionsScreen (props){
     },[survey, questions, inputSpecs])
 
     useEffect(() => {
-            if (successSave){
+            if (isSurveySave && successSaveSurvey){
               //props.history.push('/');
-              console.log(successSaveSurvey);
-              dispatch(saveQuestions(successSaveSurvey.id, questionFields));
+              //console.log(detailedDiff(questions, questionFields));
+              //dispatch(saveQuestions(successSaveSurvey.id, questionFields));
+              console.log("questions:", questions);
+              console.log("questionFields:", questionFields);
+              console.log(detailedDiff(questions, questionFields));
+              dispatch(saveQuestions(successSaveSurvey.id, questions, detailedDiff(questions, questionFields)));
+              setIsSurveySave(false);
+              console.log("Save Completed");
+              props.history.push('/');
             }
             return() => {
                 //
             };
-        }, [successSave])
+        }, [isSurveySave, successSaveSurvey])
 
+        
 
   const submitHandler = (e) =>{
     e.preventDefault();
-    console.log("questionFields:", questionFields);
-    dispatch(saveSurvey({id: surveyId, title: surveyTitle}))
-
-    //dispatch(saveSurvey({id: surveyId, title: surveyTitle}));
-    //props.match.params.id?updateSurvey():createSurvey();
-    //props.match.params.id?updateQuestions():createQuestions();
+    dispatch(saveSurvey(surveyFields));
+    setIsSurveySave(true);
 }
 
 
@@ -147,6 +137,10 @@ const changeQuestionHandler = (id, event) => {
     const newQuestionFields = questionFields.map(i => {
       if(id === i.id) {
         i[event.target.name] = event.target.value;
+        if (event.target.name === "input_type"){
+          i.input_spec_id = null;
+          i.choices = (event.target.value === "mc")?[{id: uuidv4(), name: '', input_spec_id:null}]:null;
+        }
       }
       return i;
     })
@@ -155,9 +149,9 @@ const changeQuestionHandler = (id, event) => {
 
   const changeChoiceHandler = (questionId, event) => {
     const newQuestionFields = questionFields.map(i => {
-      if(questionId === i.id) {
+      if(questionId.toString() === i.id.toString()) {
         i[event.target.name].map(c =>{
-          if (c.id === event.target.id){
+          if (c.id.toString() === event.target.id.toString()){
             c.name = event.target.value;
           }
         }) 
@@ -185,7 +179,7 @@ const changeQuestionHandler = (id, event) => {
 
 
   const addQuestionHandler = () => {
-    setQuestionFields([...questionFields, { id: uuidv4(), title: '', input_type:'', input_spec_id:'', choices:[{id: uuidv4(), name: '', input_spec_id:''}] }])
+    setQuestionFields([...questionFields, { id: uuidv4(), title: '', input_type:'textbox', input_spec_id:null, choices:null }])
   }
 
   const removeQuestionHandler = id => {
@@ -200,28 +194,24 @@ const changeQuestionHandler = (id, event) => {
   
     newQuestionFields[index] = {
       ...newQuestionFields[index],
-      choices: [...questionFields[index].choices, {id: uuidv4(), name: '', input_spec_id:''}]
+      choices: [...questionFields[index].choices, {id: uuidv4(), name: '', input_spec_id:null}]
     }
     //console.log(newQuestionFields);
     setQuestionFields(newQuestionFields);
   }
  
-
-
-
   const removeChoiceHandler = (questionId, choiceId) => {
     const newQuestionFields  = [...questionFields];
     const questionIndex = newQuestionFields.findIndex(item => item.id === questionId);
-    const choiceIndex = questionFields[questionIndex].choices.findIndex(item => item.id === choiceId);
+    const choiceIndex = newQuestionFields[questionIndex].choices.findIndex(item => item.id === choiceId);
     newQuestionFields[questionIndex].choices.splice(choiceIndex, 1);
     //console.log(newQuestionFields);
     setQuestionFields(newQuestionFields);
   }
 
-    return <div className="form">
-      {loading && loadingQuestionList? <div>Loading...</div>:
-        error? <div>{error}</div>:
-        (
+    return loadingSurveyDetails && loadingQuestionList? <div>Loading...</div>:
+      errorSurveyDetails? <div>{errorSurveyDetails}</div>:
+      errorQuestionList? <div>{errorQuestionList}</div>:<div className="form">
         <form className={classes.form} noValidate onSubmit={submitHandler}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -231,12 +221,12 @@ const changeQuestionHandler = (id, event) => {
                 fullWidth
                 id="surveyTitle"
                 label="Survey Title"
-                value={surveyTitle}
-                onChange={(e) => setSurveyTitle(e.target.value)}
+                value={surveyFields.title || ""}
+                onChange={(e) => setSurveyFields({...surveyFields, title: e.target.value})}
               />
             </Grid>
             </Grid>
-            { questionFields.map(questionField => (<Grid container spacing={2} key={questionField.id}>
+            {questionFields.length > 0 && questionFields.map(questionField => (<Grid container spacing={2} key={questionField.id}>
             <Grid item xs={12} sm={6}>
                 <TextField
                 name="title"
@@ -245,7 +235,7 @@ const changeQuestionHandler = (id, event) => {
                 fullWidth
                 id="title"
                 label="Question Title"
-                value={questionField.title}
+                value={questionField.title || ""}
                 onChange={e => changeQuestionHandler(questionField.id, e)}
               />
             </Grid>
@@ -253,7 +243,7 @@ const changeQuestionHandler = (id, event) => {
             <Grid item xs={12} sm={4}>
                 <FormControl component="fieldset">
                 <FormLabel component="legend">Question Type</FormLabel>
-                <RadioGroup aria-label="input_type" name="input_type" value={questionField.input_type} onChange={e => changeQuestionHandler(questionField.id, e)}>
+                <RadioGroup aria-label="input_type" name="input_type" value={questionField.input_type || "textbox"} onChange={e => changeQuestionHandler(questionField.id, e)}>
                     <FormControlLabel value="textbox" control={<Radio />} label="Textbox" />
                     <FormControlLabel value="mc" control={<Radio />} label="Multiple Choice" />
                     <FormControlLabel value="ls" control={<Radio />} label="Likert Scale" />
@@ -269,14 +259,14 @@ const changeQuestionHandler = (id, event) => {
                 <AddIcon />
                 </IconButton>
             </Grid>
-              {questionField.input_type==="mc" && questionField.choices.map(choice => (
+              {questionField.input_type==="mc" && questionField.choices && questionField.choices.map(choice => (
               <Grid item xs={12} sm={2} key={choice.id}>
                 <TextField
                 name="choices"
                 required
-                id={choice.id}
+                id={choice.id.toString()}
                 label="Choice Title"
-                value={choice.name}
+                value={choice.name || ""}
                 onChange={e => changeChoiceHandler(questionField.id, e)}
                 />
                 <IconButton disabled={questionField.choices.length === 1} onClick={() => removeChoiceHandler(questionField.id, choice.id)}>
@@ -294,7 +284,7 @@ const changeQuestionHandler = (id, event) => {
                     <InputLabel id="select-label">Input Specification</InputLabel>
                     <Select
                       labelId="select-label"
-                      value={questionField.input_spec_id}
+                      value={questionField.input_spec_id || ""}
                       name="input_spec_id"
                       onChange={e => changeQuestionHandler(questionField.id, e)}
                     >{inputSpecFields.map(inputSpec =>(<MenuItem key={inputSpec.id} value={inputSpec.id}>{inputSpec.name}</MenuItem>))}
@@ -317,7 +307,7 @@ const changeQuestionHandler = (id, event) => {
           >
             {props.match.params.id?"Update":"Create"}
           </Button>
-        </form>)}
+        </form>
     </div>
 
 

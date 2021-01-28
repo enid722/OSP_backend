@@ -1,6 +1,7 @@
 import express from 'express';
 import surveys from '../controllers/surveyController'
 import questions from '../controllers/questionController'
+import responses from '../controllers/responsesController'
 
 const router = express.Router();
 
@@ -26,8 +27,12 @@ router.delete("/", surveys.deleteAll);
 // Retrieve all questions in a Survey with surveyId
 router.get("/:surveyId/questions/", questions.findAllBySurveyId);
 
-// Update all questions in a Survey with surveyId
-router.put("/:surveyId/questions/", questions.updateMultipleById);
+
+// Create a new question
+router.post("/:surveyId/questions/", questions.create);
+
+// Retrieve all responses in a Question with questionId
+//router.get("/questions/:questionId/responses", responses.findAllByQuestionId);
 
 
 

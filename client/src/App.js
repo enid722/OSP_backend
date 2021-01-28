@@ -8,6 +8,8 @@ import {Link} from 'react-router-dom';
 import './App.css';
 import QuestionsScreen from './screens/QuestionsScreen';
 import SurveysScreen from './screens/SurveysScreen';
+import QRCodeScreen from './screens/QRCodeScreen';
+import ReportScreen from './screens/ReportScreen';
 
 
 
@@ -30,6 +32,8 @@ function App() {
             <main className="main">
             <Container>
             <Route path="/survey/:id" component={QuestionsScreen}/>
+            <Route path="/qrCode/:id" component={QRCodeScreen}/>
+            <Route path="/report/:id" component={ReportScreen}/>
             <Route path="/newSurvey/" component={QuestionsScreen}/>
             <Route path="/" exact={true} component={SurveysScreen} />
             </Container>

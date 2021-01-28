@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SURVEY_DETAILS_FAIL, SURVEY_DETAILS_REQUEST, SURVEY_DETAILS_SUCCESS, SURVEY_LIST_FAIL, SURVEY_LIST_REQUEST, SURVEY_LIST_SUCCESS, SURVEY_SAVE_FAIL, SURVEY_SAVE_REQUEST, SURVEY_SAVE_SUCCESS} from '../constants/surveyConstants';
+import { SURVEY_DELETE_FAIL, SURVEY_DELETE_REQUEST, SURVEY_DELETE_SUCCESS, SURVEY_DETAILS_FAIL, SURVEY_DETAILS_REQUEST, SURVEY_DETAILS_SUCCESS, SURVEY_LIST_FAIL, SURVEY_LIST_REQUEST, SURVEY_LIST_SUCCESS, SURVEY_SAVE_FAIL, SURVEY_SAVE_REQUEST, SURVEY_SAVE_SUCCESS} from '../constants/surveyConstants';
 
 
 const listSurveys = () => async (dispatch) => {
@@ -27,7 +27,6 @@ const detailsSurvey = (surveyId) => async (dispatch) => {
 }
 
 const saveSurvey = (survey) => async (dispatch) => {
-    console.log(survey);
     try{
     dispatch({type: SURVEY_SAVE_REQUEST, payload: survey});
         if (!survey.id){
@@ -43,4 +42,14 @@ const saveSurvey = (survey) => async (dispatch) => {
     }
 }
 
-export {listSurveys, detailsSurvey, saveSurvey};
+const deleteSurvey = (surveyId) => async (dispatch) => {
+    try{
+        dispatch({type: SURVEY_DELETE_REQUEST, payload: surveyId});
+        const {data} = await axios.delete("/api/surveys/" + surveyId);
+        dispatch({type: SURVEY_DELETE_SUCCESS, payload: data, success: true});
+    }catch(error){
+        dispatch({type: SURVEY_DELETE_FAIL, payload: error.message});
+    }
+}
+
+export {listSurveys, detailsSurvey, saveSurvey, deleteSurvey};

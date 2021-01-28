@@ -1,4 +1,4 @@
-import { INPUT_SPEC_LIST_FAIL, INPUT_SPEC_LIST_REQUEST, INPUT_SPEC_LIST_SUCCESS, QUESTION_DETAILS_FAIL, QUESTION_DETAILS_REQUEST, QUESTION_DETAILS_SUCCESS, QUESTION_LIST_FAIL, QUESTION_LIST_REQUEST, QUESTION_LIST_SUCCESS, QUESTION_SAVE_FAIL, QUESTION_SAVE_REQUEST, QUESTION_SAVE_SUCCESS} from "../constants/questionConstants";
+import { INPUT_SPEC_LIST_FAIL, INPUT_SPEC_LIST_REQUEST, INPUT_SPEC_LIST_SUCCESS, QUESTION_LIST_FAIL, QUESTION_LIST_REQUEST, QUESTION_LIST_SUCCESS, QUESTION_SAVE_FAIL, QUESTION_SAVE_REQUEST, QUESTION_SAVE_SUCCESS} from "../constants/questionConstants";
 
 
 function questionListReducer(state = {questions:[]}, action){
@@ -14,20 +14,7 @@ function questionListReducer(state = {questions:[]}, action){
             return state;
     }
 }
-/*
-function surveyDetailsReducer(state = {survey:{}}, action){
 
-    switch (action.type){
-        case QUESTION_DETAILS_REQUEST:
-            return {loading:true, survey: {}};
-        case QUESTION_DETAILS_SUCCESS:
-            return {loading:false, survey: action.payload};
-        case QUESTION_DETAILS_FAIL:
-            return {loading:false, error: action.payload};
-        default:
-            return state;
-    }
-}*/
 
 
 function QuestionsSaveReducer(state = {questions:[]}, action){
