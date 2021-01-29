@@ -41,11 +41,11 @@ $ npm install
 $ npm start
 ```
 
-### 5. Install dependencies and run the React App
+### 6. Install dependencies and run the React App
 ```
 $ cd client
 $ npm install
 $ npm start
 ```
-### 6. Access the CMS on browser
+### 7. Access the CMS on browser
 The React App is default running on http://localhost:3000/
