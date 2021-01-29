@@ -6,8 +6,12 @@ const listQuestions = (surveyId) => async (dispatch) => {
 
     try{
     dispatch({type: QUESTION_LIST_REQUEST});
-    const {data} = await axios.get("/api/surveys/"+surveyId+"/questions");
-    dispatch({type: QUESTION_LIST_SUCCESS, payload: data});
+        if (surveyId){
+        const {data} = await axios.get("/api/surveys/"+surveyId+"/questions");
+        dispatch({type: QUESTION_LIST_SUCCESS, payload: data});
+        }else{
+            dispatch({type: QUESTION_LIST_SUCCESS, payload: []});
+        }
     }
     catch(error){
         dispatch({type: QUESTION_LIST_FAIL, payload: error.message});
@@ -112,15 +116,21 @@ const saveQuestions = (surveyId, oldQuestions, differences) => async (dispatch) 
                 console.log(updateIndexes);
                 console.log(differences.updated[prop].choices[[updateIndexes[0]]]);
                 
-                const createChoices = updateIndexes.map(i=> typeof differences.updated[prop].choices[Number(i)].id !== 'number'?differences.updated[prop].choices[Number(i)]:{});
+                //const createChoices = updateIndexes.map(i=> typeof differences.updated[prop].choices[Number(i)].id !== 'number'?differences.updated[prop].choices[Number(i)]:{});
+                const createChoiceIndexes = updateIndexes.filter(i=> {if (typeof differences.updated[prop].choices[Number(i)].id !== 'number') return differences.updated[prop].choices[Number(i)]});
+                console.log(createChoiceIndexes);
+
+                const createChoices = createChoiceIndexes.map((c, i)=> c = differences.updated[prop].choices[createChoiceIndexes[i]]);
                 console.log(createChoices);
                 //create new choices
-                axios.post("/api/questions/"+oldQuestions[prop].id+"/choices", createChoices)
-                .then((response)=>{
-                    console.log('Response', response);
-                    return (response);
-                })
-
+                
+                if (createChoices.length > 0){
+                    axios.post("/api/questions/"+oldQuestions[prop].id+"/choices", createChoices)
+                    .then((response)=>{
+                        console.log('Response', response);
+                        return (response);
+                    })
+                }
 
                 const newChoicesName = updateIndexes.map( i => differences.updated[prop].choices[i]);
                 console.log(newChoicesName);

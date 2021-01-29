@@ -79,6 +79,8 @@ function QuestionsScreen (props){
           dispatch(listQuestions(props.match.params.id)),
           dispatch(listInputSpecs())
         ])
+      }else{
+        dispatch(listQuestions()); //clear questionList stores
       }
       // todo:handle new survey
       return () => {
