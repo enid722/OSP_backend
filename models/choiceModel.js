@@ -60,7 +60,7 @@ Choice.updateMultiple = (choices, result) => {
 
     var sql_update_choices = "";
     //todo: the sql should not include "AND input_spec_id != null", need to handle in questionAction
-    choices.map(c => sql_update_choices += `UPDATE choices SET name = "${c.name}" WHERE id = ${c.id} AND input_spec_id != null;`);
+    choices.map(c => sql_update_choices += `UPDATE choices SET name = "${c.name}" WHERE id = ${c.id} AND input_spec_id is null;`);
     console.log(sql_update_choices);
 
     sql.query(sql_update_choices, function(err, res) {

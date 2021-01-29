@@ -194,6 +194,7 @@ const saveQuestions = (surveyId, oldQuestions, differences) => async (dispatch) 
                     const updateChoiceIds = updateIndexes.map(i=> oldQuestions[prop].choices[Number(i)].id);
                     console.log(updateChoiceIds);
                     const newChoices = newChoicesName.map((c, i)=> c ={id:updateChoiceIds[i], name:c.name});
+                    console.log(newChoices);
                     axios.put("/api/choices/", newChoices)
                     .then((response)=>{
                         console.log('Response', response);

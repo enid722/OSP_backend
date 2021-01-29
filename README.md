@@ -49,3 +49,12 @@ $ npm start
 ```
 ### 7. Access the CMS on browser
 The React App is default running on http://localhost:3000/
+
+## Known issues to be fixed
+1. Problems may occur in saving choices when updating the survey that included Likert Scale question
+
+## Pending items
+1. Handling survey responses
+2. Modifying Likert Scale points
+3. Form validation
+4. Popup alert when deleting survey

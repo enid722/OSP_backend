@@ -22,6 +22,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { detailsSurvey, saveSurvey } from '../actions/surveyActions';
 import { listInputSpecs, listQuestions, saveQuestions } from '../actions/questionActions';
 import { ListItemSecondaryAction } from '@material-ui/core';
+import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -81,6 +83,7 @@ function QuestionsScreen (props){
         ])
       }else{
         dispatch(listQuestions()); //clear questionList stores
+        dispatch(listInputSpecs())
       }
       // todo:handle new survey
       return () => {
@@ -228,7 +231,11 @@ const changeQuestionHandler = (id, event) => {
               />
             </Grid>
             </Grid>
-            {questionFields.length > 0 && questionFields.map(questionField => (<Grid container spacing={2} key={questionField.id}>
+            {questionFields.length > 0 && questionFields.map((questionField, i) => (<Grid container spacing={2} key={questionField.id}>
+              <Grid item xs={12}>
+              <Divider/>
+              </Grid>
+              
             <Grid item xs={12} sm={6}>
                 <TextField
                 name="title"
@@ -236,7 +243,7 @@ const changeQuestionHandler = (id, event) => {
                 required
                 fullWidth
                 id="title"
-                label="Question Title"
+                label={`Question ${i+1}`}
                 value={questionField.title || ""}
                 onChange={e => changeQuestionHandler(questionField.id, e)}
               />
@@ -261,13 +268,13 @@ const changeQuestionHandler = (id, event) => {
                 <AddIcon />
                 </IconButton>
             </Grid>
-              {questionField.input_type==="mc" && questionField.choices && questionField.choices.map(choice => (
+              {questionField.input_type==="mc" && questionField.choices && questionField.choices.map((choice, i) => (
               <Grid item xs={12} sm={2} key={choice.id}>
                 <TextField
                 name="choices"
                 required
                 id={choice.id.toString()}
-                label="Choice Title"
+                label={`Choice ${i+1}`}
                 value={choice.name || ""}
                 onChange={e => changeChoiceHandler(questionField.id, e)}
                 />
