@@ -30,6 +30,7 @@ Question.create = (newQuestion, result) => {
 Question.createChoicesByQuestionId = (questionId, choices, result) =>{
 
     var sql_insert_choices = "INSERT INTO choices (name, input_spec_id) VALUES ?";
+    console.log("createChoicesByQuestionId Model");
     console.log(questionId);
     console.log(choices);
     const newChoices = choices.map(c => [c.name, c.input_spec_id]);
@@ -64,6 +65,28 @@ Question.createChoicesByQuestionId = (questionId, choices, result) =>{
 
 
         //result(null, createdChoices); 
+    });
+
+}
+
+
+Question.createQuestionChoicesByInputSpecId = (questionId, inputSpecId, result) => {
+    console.log("createQuestionChoicesByInputSpecId Model");
+    console.log(questionId);
+    console.log(inputSpecId);
+    sql.query(`INSERT INTO question_choices (question_id,choice_id) (SELECT ${questionId} as question_id, c.id as choice_id FROM choices c, input_specs i
+        WHERE c.input_spec_id = i.id
+        AND input_spec_id = ${inputSpecId})`, (err, res) => {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+
+        console.log("created questionChoices: ", {
+            res
+        });
+        result(null, res);
     });
 
 }
@@ -204,6 +227,27 @@ Question.removeChoicesByQuestionId = (questionId, choices, result) =>{
     });
 
 }
+
+Question.removeQuestionChoicesByInputSpecId = (questionId, inputSpecId, result) =>{
+
+    console.log(questionId);
+    console.log(inputSpecId);
+    //delete questionchoices
+    
+    sql.query(`DELETE question_choices FROM question_choices 
+    inner join  (SELECT ${questionId} as question_id, c.id as choice_id FROM choices c WHERE input_spec_id = ${inputSpecId}) as t1 
+    on question_choices.question_id = t1.question_id and question_choices.choice_id = t1.choice_id`, function(err, res) {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+        console.log(res);
+        console.log("removed question choices: ", inputSpecId);
+        result(null, res); 
+    });
+}
+
 
 Question.removeAll = result => {
     sql.query("DELETE FROM questions", (err, res) => {

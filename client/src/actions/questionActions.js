@@ -39,6 +39,12 @@ const saveQuestions = (surveyId, oldQuestions, differences) => async (dispatch) 
                     if (response.status = 200 && differences.added[prop].choices){
                         return axios.post("/api/questions/"+response.data.id+"/choices", differences.added[prop].choices);
                     }
+                    //create questionChoices if input_spce is defined
+                    console.log(newInputSpecId);
+                    if (response.status = 200 && newInputSpecId){
+                        console.log("create questionChoices, input_spce is :" + newInputSpecId)
+                        return axios.post("/api/questions/"+response.data.id+"/inputSpecs/"+newInputSpecId);
+                    }
                 })
                 .then((response) => {
                     console.log('Response', response);
@@ -49,15 +55,17 @@ const saveQuestions = (surveyId, oldQuestions, differences) => async (dispatch) 
                 console.log(oldQuestions[prop]);
                 console.log("Create New Choice: ");
                 console.log(differences.added[prop].choices);
-                const createIndexes = Object.keys(differences.added[prop].choices);
-                const newChoices = createIndexes.map( i => differences.added[prop].choices[i]);
-                console.log(newChoices);
-                axios.post("/api/questions/"+oldQuestions[prop].id+"/choices", newChoices)
-                .then((response)=>{
-                    console.log('Response', response);
-                    return (response);
-                })
-                
+                if (oldQuestions[prop].input_type !== "ls"){
+                    console.log("the original type is not LS, but"+oldQuestions[prop].input_type);
+                    const createIndexes = Object.keys(differences.added[prop].choices);
+                    const newChoices = createIndexes.map( i => differences.added[prop].choices[i]);
+                    console.log(newChoices);
+                    axios.post("/api/questions/"+oldQuestions[prop].id+"/choices", newChoices)
+                    .then((response)=>{
+                        console.log('Response', response);
+                        return (response);
+                    })
+                }
             }
         });
 
@@ -80,14 +88,36 @@ const saveQuestions = (surveyId, oldQuestions, differences) => async (dispatch) 
                 console.log("For existing Question: ");
                 console.log(oldQuestions[prop]);
                 console.log("Delete Choices:")
-                const deleteIndexes = Object.keys(differences.deleted[prop].choices);
-                const deteleChoiceIds = deleteIndexes.map(i=> oldQuestions[prop].choices[Number(i)].id); //get a array of choiceId to be deleted
-                console.log(deteleChoiceIds);
-                axios.delete("/api/questions/"+oldQuestions[prop].id+"/choices", { data: deteleChoiceIds })
-                .then((response)=>{
-                    console.log('Response', response);
-                    return (response.data);
-                })
+                if (oldQuestions[prop].input_type !== "ls"){
+                    console.log("the original type is not LS, but"+oldQuestions[prop].input_type);
+                    const deleteIndexes = Object.keys(differences.deleted[prop].choices);
+                    const deteleChoiceIds = deleteIndexes.map(i=> oldQuestions[prop].choices[Number(i)].id); //get a array of choiceId to be deleted
+                    console.log(deteleChoiceIds);
+                    axios.delete("/api/questions/"+oldQuestions[prop].id+"/choices", { data: deteleChoiceIds })
+                    .then((response)=>{
+                        console.log('Response', response);
+                        return (response.data);
+                    })
+                }else{
+                    //remove question_choices but not to delete the choices
+                    //const deleteIndexes = Object.keys(differences.deleted[prop].choices);
+                    //const deteleChoiceIds = deleteIndexes.map(i=> oldQuestions[prop].choices[Number(i)].id); //get a array of choiceId to be deleted
+                    //console.log(deteleChoiceIds);
+                    /* to remove question_choices
+                    axios.delete("/api/questions/"+oldQuestions[prop].id+"/choices", { data: deteleChoiceIds })
+                    .then((response)=>{
+                        console.log('Response', response);
+                        return (response.data);
+                    })*/
+                    console.log("remove question_choices but not to delete the choices")
+                    console.log("/api/questions/"+oldQuestions[prop].id+"/inputSpecs/"+oldQuestions[prop].input_spec_id);
+                    axios.delete("/api/questions/"+oldQuestions[prop].id+"/inputSpecs/"+oldQuestions[prop].input_spec_id)
+                    .then((response)=>{
+                        console.log('Response', response);
+                        return (response.data);
+                    })
+
+                }
             }
         });
         //handle update request
@@ -105,12 +135,36 @@ const saveQuestions = (surveyId, oldQuestions, differences) => async (dispatch) 
                     console.log('Response', response);
                     return (response.data);
                 })
+                //create questionChoices if input_spce is defined
+                if (differences.updated[prop].hasOwnProperty('input_spec_id') && differences.updated[prop].input_spec_id){
+                    console.log("updated inputtype to LS, create questionChoices, input_spce is :" + differences.updated[prop].input_spec_id);
+                    return axios.post("/api/questions/"+oldQuestions[prop].id+"/inputSpecs/"+differences.updated[prop].input_spec_id);
+                }                
+
             }
                 
             if (differences.updated[prop].hasOwnProperty('choices')){
                 //update choices
                 console.log("update choices")
                 console.log(differences.updated[prop].choices);
+                if (!differences.updated[prop].choices && oldQuestions[prop].input_type === "mc"){
+                    console.log("remove original choices")
+                    //todo: avoid dulicated code
+                    console.log("For existing Question: ");
+                    console.log(oldQuestions[prop]);
+                    console.log("Delete Choices:")
+                    //const deleteIndexes = Object.keys(differences.updated[prop].choices);
+                    //const deteleChoiceIds = deleteIndexes.map(i=> oldQuestions[prop].choices[Number(i)].id); //get a array of choiceId to be deleted
+                    const deteleChoiceIds = oldQuestions[prop].choices.map(c=> c.id);
+                    console.log(deteleChoiceIds);
+                    axios.delete("/api/questions/"+oldQuestions[prop].id+"/choices", { data: deteleChoiceIds })
+                    .then((response)=>{
+                        console.log('Response', response);
+                        return (response.data);
+                    })
+
+
+                }
                 
                 const updateIndexes = Object.keys(differences.updated[prop].choices);
                 console.log(updateIndexes);
@@ -125,23 +179,27 @@ const saveQuestions = (surveyId, oldQuestions, differences) => async (dispatch) 
                 //create new choices
                 
                 if (createChoices.length > 0){
+                    console.log("/api/questions/"+oldQuestions[prop].id+"/choices");
+                    console.log(createChoices);
                     axios.post("/api/questions/"+oldQuestions[prop].id+"/choices", createChoices)
                     .then((response)=>{
                         console.log('Response', response);
                         return (response);
                     })
                 }
-
-                const newChoicesName = updateIndexes.map( i => differences.updated[prop].choices[i]);
-                console.log(newChoicesName);
-                const updateChoiceIds = updateIndexes.map(i=> oldQuestions[prop].choices[Number(i)].id);
-                console.log(updateChoiceIds);
-                const newChoices = newChoicesName.map((c, i)=> c ={id:updateChoiceIds[i], name:c.name});
-                axios.put("/api/choices/", newChoices)
-                .then((response)=>{
-                    console.log('Response', response);
-                    return (response.data);
-                })
+                //todo: if the choice has defined spec_id, not to update
+                //for now, temporary handled in choiceModel.js
+                    const newChoicesName = updateIndexes.map( i => differences.updated[prop].choices[i]);
+                    console.log(newChoicesName);
+                    const updateChoiceIds = updateIndexes.map(i=> oldQuestions[prop].choices[Number(i)].id);
+                    console.log(updateChoiceIds);
+                    const newChoices = newChoicesName.map((c, i)=> c ={id:updateChoiceIds[i], name:c.name});
+                    axios.put("/api/choices/", newChoices)
+                    .then((response)=>{
+                        console.log('Response', response);
+                        return (response.data);
+                    })
+                //}
             }
             
 

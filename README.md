@@ -12,7 +12,7 @@ Node.js and MySQL database installed.
 
 ### 1. Clone repo
 ```
-$ git clone git@github.com:enid722/OSP_backend.git
+$ git clone https://github.com/enid722/OSP_backend.git
 
 $ cd OSP_backend
 ```

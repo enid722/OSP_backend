@@ -41,7 +41,7 @@ exports.create = async (req, res) => {
         message: "Content can not be empty."
       });
     }
-
+    console.log("createChoicesByQuestionId Controller");
     // Save Choice in the database
     console.log(req.body);
     await Question.createChoicesByQuestionId(req.params.questionId, req.body , (err, data) => {
@@ -75,7 +75,53 @@ exports.create = async (req, res) => {
     });
   };
 
-  
+  exports.createQuestionChoicesByInputSpecId = async (req, res) => {  
+    console.log("question controller - createQuestionChoicesByInputSpecId");
+    console.log(req.params.questionId);
+    console.log(req.params.inputSpecId);
+    await Question.createQuestionChoicesByInputSpecId(req.params.questionId, req.params.inputSpecId , (err, data) => {
+      if (err)
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while creating the QuestionChoices."
+        });
+      else res.send(data);
+    });
+  };
+/*
+  exports.removeQuestionChoicesByInputSpecId = async (req, res) => {  
+    console.log("question controller - removeQuestionChoicesByInputSpecId");
+    console.log(req.params.questionId);
+    console.log(req.params.inputSpecId);
+    await Question.removeQuestionChoicesByInputSpecId(req.params.questionId, req.params.inputSpecId , (err, data) => {
+      if (err)
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while creating the QuestionChoices."
+        });
+      else res.send(data);
+    });
+  };*/
+
+  exports.removeQuestionChoicesByInputSpecId = async (req, res) => {
+    console.log("question controller - removeQuestionChoicesByInputSpecId");
+    console.log(req.params.questionId);
+    console.log(req.params.inputSpecId);
+    await Question.removeQuestionChoicesByInputSpecId(req.params.questionId, req.params.inputSpecId, (err, data) => {
+      if (err) {
+        if (err.kind === "not_found") {
+          res.status(404).send({
+            message: `Not found QuestionChoices with id ${req.params.questionId}.`
+          });
+        } else {
+          res.status(500).send({
+            message: "Could not delete QuestionChoices with id " + req.params.questionId
+          });
+        }
+      } else res.send({ message: `QuestionChoices was deleted successfully!` });
+    });
+  };
+
 // Retrieve all Questions from the database.
 exports.findAll = async (req, res) => {
     await Question.getAll((err, data) => {
