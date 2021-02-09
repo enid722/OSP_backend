@@ -25,4 +25,4 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname+'/client/build/index.html'));
   });*/
 
-app.listen(process.env.PORT, () => {console.log("Server started at http://"+process.env.HOST+":" + process.env.PORT)});
+app.listen(process.env.PORT, () => {console.log("Server started at http://"+process.env.HOST+":" + process.env.REACT_APP_SERVER_PORT )});
